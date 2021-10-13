@@ -1,0 +1,13 @@
+Column Name;Full Name;Data Type;Value Range
+ID;Sample code number;int;NA
+clump_thickness;Clump Thickness;int;1 - 10
+uniformity_of_cell_size;Uniformity of Cell Size;int;1 - 10
+uniformity_of_cell_shape;Uniformity of Cell Shape;int;1 - 10
+marginal_adhesion;Marginal Adhesion;int;1 - 10
+single_epithelial_cell_size;Single Epithelial Cell Size;int;1 - 10
+bare_nuclei;Bare Nuclei;int;1 - 10
+bland_chromatin;Bland Chromatin;int;1 - 10
+normal_nucleoli;Normal Nucleoli;int;1 - 10
+mitoses;Mitoses;int;1 - 10
+class;Class;factor;Benign, Malignant
+
