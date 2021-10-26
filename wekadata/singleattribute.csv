@@ -1,0 +1,9 @@
+Classifier ;Evaluator;Search ;Accuracy ;TP;FP;FN;TN
+RandomForest;CorrelationAttributeEval;Ranker;97,1388;443;5;15;236
+RandomForest;OneRAttributeEval;Ranker;97,1388;443;5;15;236
+RandomForest;InfoGainAttributeEval;Ranker ;97,1388;443;5;15;236
+RandomForest;GainRatioAttributeEval;Ranker;97,1388;443;5;15;236
+SMO;CorrelationAttributeEval;Ranker;96,5665;444;10;14;231
+SMO;OneRAttributeEval;Ranker;96,5665;444;10;14;231
+SMO;InfoGainAttributeEval;Ranker;96,5665;444;10;14;231
+SMO;GainRatioAttributeEval;Ranker;96,5665;444;10;14;231

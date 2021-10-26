@@ -1,0 +1,12 @@
+﻿Algorithm;Classifier;combinationRule;metaClassfier ;Accuracy ;TP;FP;FN;TN
+Vote ;RandomForest, SMO, NaiveBayes;Average of Probabilities;n/a;97,01;444;7;14;234
+Vote ;RandomForest, SMO, NaiveBayes;Majority Voting ;n/a;96,97;444;7;14;234
+Bagging ;RandomForest ;n/a;n/a;96,91;443;7;15;234
+Bagging ;SMO;n/a;n/a;96,74;445;10;13;231
+Bagging ;NaiveBayes;n/a;n/a;96,38;438;6;20;235
+AdaBoostM1;RandomForest;n/a;n/a;96,90;443;7;15;234
+AdaBoostM1;SMO;n/a;n/a;96,74;445;9;13;232
+AdaBoostM1;NaiveBayes;n/a;n/a;96,00;444;14;14;227
+Stacking ;RandomForest, SMO, NaiveBayes;n/a;RandomForest ;96,44;442;9;16;233
+Stacking ;RandomForest, SMO, NaiveBayes;n/a;SMO;96,41;442;9;16;232
+Stacking ;RandomForest, SMO, NaiveBayes;n/a;NaiveBayes ;96,95;443;6;15;235

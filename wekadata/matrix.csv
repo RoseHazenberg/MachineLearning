@@ -1,0 +1,4 @@
+;;;
+Predicted;;Benign;Malignant
+Real;Benign;TP;FN
+;Malignant;FP;TN

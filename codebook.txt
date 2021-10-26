@@ -1,5 +1,5 @@
 Column Name;Full Name;Data Type;Value Range
-ID;Sample code number;int;NA
+id;Sample code number;int;NA
 clump_thickness;Clump Thickness;int;1 - 10
 uniformity_of_cell_size;Uniformity of Cell Size;int;1 - 10
 uniformity_of_cell_shape;Uniformity of Cell Shape;int;1 - 10

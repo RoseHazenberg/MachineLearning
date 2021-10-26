@@ -1,0 +1,5 @@
+﻿Classifier;Evaluator ;Search ;Accuracy;TP;FP;FN;TN
+RandomForest;CfsSubsetEval;ExhaustiveSearch;96,2804;443;11;15;230
+RandomForest;CfsSubsetEval;BestFirst;96,2804;443;11;15;230
+SMO;CfsSubsetEval;ExhaustiveSearch;96,7096;445;10;13;231
+SMO;CfsSubsetEval;BestFirst;96,7096;445;10;13;231
