@@ -501,10 +501,10 @@ Table \ref{tab:meta_learners} shows the outcome of the meta learners with a 10-f
 
 # ROC curve analysis 
 
-In the next section visualizes (Receiver Operating Characteristics (ROC) curves for both RandomForest and SMO. ROC curve is a graph showing the performance of a classification model at all threshold settings. The ROC curve is created by plotting the True Positive Rate (TPR) against the False Positive Rate (FPR) where TPR is on the y-axis and FDR is on the x-axis.
+In the next section visualizes Receiver Operating Characteristics (ROC) curves for both RandomForest and SMO. ROC curve is a graph showing the performance of a classification model at all threshold settings. The ROC curve is created by plotting the True Positive Rate (TPR) against the False Positive Rate (FPR) where TPR is on the y-axis and FDR is on the x-axis.
 
-```{r, fig.cap="\\label{fig:roc}ROC curve.", out.width="80%"}
-roc_data_smo <- read.table("wekadata/roccurve.arff", sep = ",", comment.char = "@")
+```{r, fig.cap="\\label{fig:roc}ROC curve for the classifiers SMO and RandomForest at all threshold setting. A shows the ROC curve of SMO and B shows the ROC curve of RandomForest", out.width="80%"}
+roc_data_smo <- read.table("wekadata/roccurveSMO.arff", sep = ",", comment.char = "@")
 
 names(roc_data_smo) <- c("Instance_number", "True_Positives", "False_Negatives",
                          "False_Positives", "True_Negatives", "False_Positive_Rate",
@@ -519,6 +519,7 @@ roc_smo <- ggplot(data = roc_data_smo, mapping = aes(x = False_Positive_Rate,
   geom_line(aes(color = "classifier")) +
   geom_abline(aes(color = "threshold", slope = 1, intercept = 0)) +
   scale_color_manual(values = colors) +
+  ggtitle("SMO") +
   xlab("False Positive Rate") +
   ylab("True Positive Rate") +
   theme_pubr() +
@@ -536,6 +537,7 @@ roc_rf <- ggplot(data = roc_data_rf, mapping = aes(x = False_Positive_Rate,
   geom_line(aes(color = "classifier")) +
   geom_abline(aes(color = "threshold", slope = 1, intercept = 0)) +
   scale_color_manual(values = colors) +
+  ggtitle("RandomForest") +
   xlab("False Positive Rate") +
   ylab("True Positive Rate") +
   theme_pubr() +
@@ -552,9 +554,7 @@ legend <- get_legend(roc_rf + guides(color = guide_legend(nrow = 1)) +
 plot_grid(combined_roc, legend, ncol = 1)
 ```
 
-In figure \ref{fig:roc} there are two figures with an ROC curve. The first one figure \ref{fig:roc}A shows the ROC curve from the algorithm SMO and the second figure \ref{fig:roc}B shows the ROC curve from the algorithm RandomForest. The TPR is plotted against the FPR at various thresholds. The area under the roc curve which is shown in orange is called the Area Under The Curve (AUC) curve. The blue threshold line shown in the figures is a straight line which is the predicted probability of an observation. Figure \ref{fig:roc}A has three dots and is connect with an line. The line is almost 90 degrees and straight with an angle this shows an ideal situation because the two curves of TP and TN almost don't overlap. When the positive and negative class overlap then there are error and runs the model in a curve or in a straight line just like the threshold line.   
-
-
+In figure \ref{fig:roc} there are two figures with an ROC curve. The first one figure \ref{fig:roc}A shows the ROC curve from the algorithm SMO and the second figure \ref{fig:roc}B shows the ROC curve from the algorithm RandomForest. The TPR is plotted against the FPR at various thresholds which forms a line when the dots join. The area under the ROC curve which is shown in orange is called the Area Under The Curve (AUC) curve. The blue threshold line shown in the figures is a straight line which is the predicted probability of an observation. Figure \ref{fig:roc}A has three dots and is connect with an line. The line is almost 90 degrees and straight with an angle this shows an ideal situation because the two curves of TP and TN almost don't overlap. When the positive and negative class overlap then there are error and runs the model in a curve or in a straight line just like the threshold line. The ROC curve of RandomForest is shown in \ref{fig:roc}B here is also the TPR plotted against the FPR. The threshold line is here the same as for the ROC curve of SMO. Between the two figures is the biggest difference that RandomForest has more dots in the figure which means that it shows more threshold points. Just like the ROC curve of SMO has RandomForest almost the same curve but for RandomForest it the line slightly straighter. This means that this is almost and ideal situation, to be ideal the line should run in a 90 degrees angle because then there are no overlap between benign and malignant. Thus the ROC curve of RandomForest is slightly better than SMO. In Weka has the AUC an value of 0.964 for SMO and the value for AUC of RandomForest is 0.9912. This also indicates that the ROC curve of RandomForest better is than SMO because the AUC of RandomForest is closer to 1 which categories as very good.
 
 
 \newpage
