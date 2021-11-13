@@ -6,12 +6,28 @@ output:
     pdf_document:
       number_sections: yes
       toc: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # Add: chunk caching
 knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r}
+## Libraries
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+library(tidyverse)
+library(pheatmap)
+library(stats)
+library(cowplot)
+library(ggbiplot)
+library(png)
+library(ggpubr)
 ```
 
 # Introduction
@@ -50,20 +66,6 @@ kable(codebook, caption = "Codebook with an overview of the data.")
 ```
 
 \newpage
-
-```{r}
-## Libraries
-library(ggplot2)
-library(dplyr)
-library(kableExtra)
-library(tidyverse)
-library(pheatmap)
-library(stats)
-library(cowplot)
-library(ggbiplot)
-library(png)
-library(ggpubr)
-```
 
 # Exploratory Data Analysis (EDA) of breast cancer
 
@@ -112,6 +114,7 @@ summary(breastcancer)
 
 The outcome of the summary shows that every column has the same minimum and maximum except the id and the class but these columns aren't properties. The 1st Qu, median, mean and 3rd Qu are different for every column but they all lie close to each other. At the minimum and maximum, you can see that the data only consist of the numbers 1 to 10.
 
+\pagebreak
 ## Missing data
 
 To check if there is missing data, a table is generated with the number of NA's per column with the following code.
@@ -123,7 +126,6 @@ kable(colSums(is.na(breastcancer)), col.names = "Number of NA's",
 
 Table \ref{tab:table_na} shows the number of NA's in the dataset of breast cancer. It shows that there are 16 NA's in de column bare nuclei, the other columns have 0 NA's. For the research question, there will be looked at the uniformity of cell size/shape and not at the column bare nuclei. Since there are only 16 NA's and in the column that isn't relevant so it doesn't affect the research question. To deal with these missing values column bare nuclei can be dropped. For the visualizations now it doesn't impact the data so these values aren't removed.
 
-\newpage
 
 ## Displaying the variation of the breast cancer dataset 
 
@@ -166,7 +168,8 @@ Figure \ref{fig:hist} shows the total count of the properties per stage in a his
 
 ```{r, fig.cap="\\label{fig:relationship}Relationship between the properties and their values for both the classes of breast cancer.", out.width="70%"}
 ## Displays the plot with geom_jitter
-ggplot(data = breast_long, mapping = aes(x = property, y = value, color = class)) +
+ggplot(data = breast_long, mapping = aes(x = property, y = value, 
+                                         color = class)) +
   geom_jitter(alpha = 0.8, stat = "identity") +
   scale_colour_manual(name = "class", values = c("steelblue", "plum1"), 
                       aesthetics = c("color", "fill")) +
@@ -183,7 +186,7 @@ Figure \ref{fig:relationship} shows the relationship between the properties and 
 
 ## Displaying the distribution of breast cancer data
 
-```{r, fig.cap="\\label{fig:line}Correlation of the values per property divided into the two stages of breast cancer using a line plot."}
+```{r, fig.cap="\\label{fig:line}Correlation of the values per property divided into the two stages of breast cancer using a line plot.", out.width="75%"}
 ## Plot the plot with geom_line
 ggplot(breast_long, aes(x = value, y = property)) + 
   geom_line(aes(color = class, linetype = class)) + 
@@ -206,20 +209,20 @@ ggplot(data = breast_long, mapping = aes(class, value)) +
   geom_bar(stat = "identity", aes(color = class, fill = class)) +
   scale_fill_manual(values=c("steelblue", "plum1"), 
                     aesthetics = c("color", "fill")) +
-  labs(x="Class (n/a)", y="Total count (n/a)", color = "Class", fill = "Class") +
+  labs(x="Class (n/a)", y="Total count (n/a)", color = "Class", 
+       fill = "Class") +
   theme_minimal()
 ```
 
 The bar plot in figure \ref{fig:bar} shows the total number of values per class. Here you can see that the classes are unevenly represented, the total is higher for the class malignant. But this can be, as described in figure \ref{fig:hist}, that the class benign mainly consist of low values such as 1 and that the class malignant mainly consists of high values such as 10. The figure shows the total of these values. So this could explain why the bar for the class malignant is higher. This doesn't say that there is more malignant than benign.
 
-\newpage
 
-```{r, total_class}
+```{r, total}
 kable(table(breastcancer$class), col.names = c("Class", "Total"), 
       caption = "Total number of the class")
 ```
 
-Table \ref{tab:total_class} shows the total number of benign and malignant. Figure \ref{fig:bar} shows that the total of malignant is higher than benign but in table \ref{tab:total_class} you can see that the total of the class benign is more. This is because table \ref{tab:total_class} shows the total number of rows with the class and figure \ref{fig:bar} shows the total count of the values 1 to 10 for each class. So in table \ref{tab:total_class} you can see that there isn't more malignant than benign. So here are the classes also unevenly represented but then the other way around. 
+Table \ref{tab:total} shows the total number of benign and malignant. Figure \ref{fig:bar} shows that the total of malignant is higher than benign but in table \ref{tab:total} you can see that the total of the class benign is more. This is because table \ref{tab:total} shows the total number of rows with the class and figure \ref{fig:bar} shows the total count of the values 1 to 10 for each class. So in table \ref{tab:total} you can see that there isn't more malignant than benign. So here are the classes also unevenly represented but then the other way around. 
 
 \newpage 
 
@@ -261,31 +264,39 @@ Figure \ref{fig:heatmap} shows the correlation of the properties. Red shows that
 The next figures are clusters based on two properties the uniformity of cell size and shape. 
 
 ```{r, fig.cap="\\label{fig:cluster}kMeans cluster of uniformity of cell size and shape per class.", out.width="75%"}
+## Make 2 clusters
 kmeans.cluster <- kmeans(is.na(breastcancer), centers = 2)
 
 clusters <- as.factor(kmeans.cluster$cluster)
 
+## Plot cluster 1 for uniformity of cell size
 clust1 <- ggplot(breastcancer, aes(uniformity_of_cell_size, class, 
                                    color = clusters)) +
-  geom_point(size = 0.5, position = position_jitter(height = 0.3, width = 0.3)) +
+  geom_point(size = 0.5, position = position_jitter(height = 0.3, 
+                                                    width = 0.3)) +
   labs(x="Uniformity of cell size", y="Class") +
   theme_minimal() +
   scale_x_continuous(breaks = c(1:10))
 
+## Plot cluster 2 for uniformity of cell shape 
 clust2 <- ggplot(breastcancer, aes(uniformity_of_cell_shape, class, 
                                   color = clusters)) +
-  geom_point(size = 0.5, position = position_jitter(height = 0.3, width = 0.3)) +
+  geom_point(size = 0.5, position = position_jitter(height = 0.3, 
+                                                    width = 0.3)) +
   labs(x="Uniformity of cell shape", y="Class") +
   theme_minimal() +
   scale_x_continuous(breaks = c(1:10))
 
+## Combine the two plots
 combined <- plot_grid(clust1 + theme(legend.position = "none"), 
                       clust2 + theme(legend.position = "none"),
                       labels = c('A', 'B'), label_size = 12)
 
+## Get one legend for both plots
 combined_legend <- get_legend(clust2 + guides(color = guide_legend(nrow = 1)) +
     theme(legend.position = "bottom"))
 
+## Plot the combined plot
 plot_grid(combined, combined_legend, ncol = 1, rel_heights = c(1, .1))
 ```
 
@@ -346,6 +357,7 @@ clean_long <- pivot_longer(data = breast_clean,
 
 Table \ref{tab:table_sums} shows the total number of values per property. In the table can be seen that there most of the total lies between 1900 and 3000 but there is only one exception that is for mitoses here are there only 1095. In all the figures above especially in figure \ref{fig:heatmap} and \ref{fig:pca}B can be seen that mitoses is different that the other properties. Because in the heatmap \ref{fig:heatmap} shows mitoses for both classes a very low correlation value of 0. In the PCA plot \ref{fig:pca}B points the vector of mitoses the other way compared to the other properties which points in the same direction and lie in the same cluster. Therefore the column mitoses is removed form the dataset. 
 
+\pagebreak
 
 ```{r, fig.cap="\\label{fig:heatmap_clean}Heatmap with the correlation matrix of the properties. After the removal of the property mitoses.", out.width="75%"}
 ## Get the correlation matrix
@@ -358,7 +370,8 @@ pheatmap(cormat, labels_row = codebook$Full.Name[-1],
 
 Figure \ref{fig:heatmap_clean} shows the correlation matrix in a heatmap for all properties. Here can be seen that the property mitoses is removed compared to the heatmap in figure \ref{fig:heatmap}. The legend with the colors is also adapted, here is the lowest value 0.5, and in figure \ref{fig:heatmap} 0.3. In the heatmap \ref{fig:heatmap_clean} are the properties highly correlated with themselves because they contain the same values. The heatmap shows a better patron than in figure \ref{fig:heatmap} because mitoses isn't shown here otherwise, the figure has remained the same. The two properties Uniformity of cell size and Uniformity of cell shape show a high correlation with each other and are in the same cluster.
 
-\newpage 
+\pagebreak
+\newpage
 
 ```{r}
 ## Create a csv file for Weka 
@@ -372,26 +385,25 @@ After an machine learning performance shows the performance an accuracy which is
 
 For the dataset there are two classes benign and malignant but it is important that these classes are correctly predicted and performed. Because when the test shows benign then you don't want to be malignant after all and when you are malignant you want to be sure that you are and not that it is actually benign so that the test is incorrectly.    
 
-So by decreasing the number of false positives (FP). Thus it is important that the predicted class benign is actually malignant is reduced. It not important that the false negatives are reduced because the prediction is malignant and the actual class is benign and this is good because you want to be benign before and after an test and not malignant. As seen in table \ref{tab:matrix} where the first row is the predicted class and the second and third row is the real class of breast cancer. Here stand FP by the predicted class benign but the actual class is malignant.
+So by decreasing the number of false positives (FP). Thus it is important that the predicted class benign is actually malignant is reduced. It not important that the false negatives are reduced because the prediction is malignant and the actual class is benign and this is good because you want to be benign before and after an test and not malignant. As seen in table \ref{tab:confusion_matrix} where the first row is the predicted class and the second and third row is the real class of breast cancer. Here stand FP by the predicted class benign but the actual class is malignant.
 It is important that the classification is accuracy but it should be fast because if the test shows malignant then they need to treat it as soon as possible before it gets worse. So in a more accurate metric should FP be decreased.    
 
+```{r confusion_matrix}
+matrix <- read.csv("wekadata/matrix.csv", sep = ";", header = FALSE) 
+## Set rownames and colnames to null
+rownames(matrix) <- colnames(matrix) <- NULL
+kable(matrix, caption = "Confusion matrix of the breast cancer dataset")
+```
 
 The confusion matrix consist of the following layout in Weka:
+For this matrix is benign positive and malignant negative. So it is positive that you don't have cancer and you are benign. And it is negative that you have cancer because you don't want cancer but you are malignant. 
 
 === Confusion Matrix ===  
 
    a   b   <-- classified as          
   TP  FN |   a = Benign  
   FP  TN |   b = Malignant
-
   
-```{r}
-matrix <- read.csv("wekadata/matrix.csv", sep = ";", header = TRUE) 
-rownames(matrix) <- colnames(matrix) <- NULL
-kable(matrix)
-```
-
-
 \pagebreak
 # Performance of Machine Learning algorithms 
 
@@ -403,7 +415,7 @@ classifiers <- read.csv("wekadata/classifiers.csv", header = TRUE, sep = ";")
 kable(classifiers, caption = "Classifications using 10-fold cross validation")
 ```
 
-Table \ref{tab:classifiers} shows the results of the machine learning algorithms with 8 classifier categories. The results shows the speed, accuracy, True Positive (TP), False Positive(FP), True Negative(TN), and False Negative(FN), the last four are part of the confusion matrix in Weka. The accuracy is shown in percentages. The first rows shows the outcome of the classifier ZeroR, here can be seen that the accuracy is 65,5222% and that there are only TP 458 and FP 241, FN and TN have both a value of 0. OneR has an accuracy of 92,7039% which is already higher than for ZeroR. OneR has 444 TP, 37 FP, 14 FN and 204 TN which has thus more FN and TN than ZeroR. The next classifier in the table is NaiveBayes, this classifier has a higher accuracy than both ZeroR and OneR which is 96,4235% NaiveBayes contains 439 TP, 6 FP, 19 FN and 235 TN. Another classifier that is used is SimpleLogistic which has an accuracy of 95,7082% it also has 446 TP, 18 FP, 12 FN and 223 TN. The fifth row of table \ref{tab:classifiers} contains the results of the classifier SMO. SMO has an accuracy of 96.5665% which has so far the highest accuracy. It has 444 TP, 10 FP, 14 FN and 231 TN. The next classifier is IBk with an accuracy of 95,1359% and it has 443 TP, 19 FP, 15 FN and 222 TN. The seventh classifier is J48 with an accuracy of 94,9928%. J48 has 438 TP, 15 FP, 20 FN and 226 TN. The last classifier is RandomForest which has an accuracy of 97,1388% and has thus the highest accuracy of all the classifiers. RandomForest has 443 TP, 5 FP, 15 FN and 236 TN. In general has all the classifiers a low speed which is the time it takes to build the model in seconds, SimpleLogistic takes the longest to build the model. Comparing the accuracy for all the classifiers you can be seen that ZeroR has the lowest accuracy this is because ZeroR has for both FN and TN 0. ZeroR shows the most likely class with only the value of both class benign and malignant which are total number of the classes just like in \ref{tab:total_class}. RandomForest has the highest accuracy and the other classifiers lie in between with little difference between them. Every classifier has in the 400 True Positives and in the 200 True Negatives except ZeroR. The False Positives and the False Negatives is different for every classifier but no major difference between them. Only OneR has a bigger difference in the number of False Positives compared to the other classifiers. The two algorithms with the highest accuracy are RandomForest and SMO. These algorithms are probably the most effective because of their high accuracy. 
+Table \ref{tab:classifiers} shows the results of the machine learning algorithms with 8 classifier categories. The results shows the speed, accuracy, True Positive (TP), False Positive(FP), True Negative(TN), and False Negative(FN), the last four are part of the confusion matrix in Weka. The accuracy is shown in percentages. The first rows shows the outcome of the classifier ZeroR, here can be seen that the accuracy is 65,5222% and that there are only TP 458 and FP 241, FN and TN have both a value of 0. OneR has an accuracy of 92,7039% which is already higher than for ZeroR. OneR has 444 TP, 37 FP, 14 FN and 204 TN which has thus more FN and TN than ZeroR. The next classifier in the table is NaiveBayes, this classifier has a higher accuracy than both ZeroR and OneR which is 96,4235% NaiveBayes contains 439 TP, 6 FP, 19 FN and 235 TN. Another classifier that is used is SimpleLogistic which has an accuracy of 95,7082% it also has 446 TP, 18 FP, 12 FN and 223 TN. The fifth row of table \ref{tab:classifiers} contains the results of the classifier SMO. SMO has an accuracy of 96.5665% which has so far the highest accuracy. It has 444 TP, 10 FP, 14 FN and 231 TN. The next classifier is IBk with an accuracy of 95,1359% and it has 443 TP, 19 FP, 15 FN and 222 TN. The seventh classifier is J48 with an accuracy of 94,9928%. J48 has 438 TP, 15 FP, 20 FN and 226 TN. The last classifier is RandomForest which has an accuracy of 97,1388% and has thus the highest accuracy of all the classifiers. RandomForest has 443 TP, 5 FP, 15 FN and 236 TN. In general has all the classifiers a low speed which is the time it takes to build the model in seconds, SimpleLogistic takes the longest to build the model. Comparing the accuracy for all the classifiers you can be seen that ZeroR has the lowest accuracy this is because ZeroR has for both FN and TN 0. ZeroR shows the most likely class with only the value of both class benign and malignant which are total number of the classes just like in \ref{tab:total}. RandomForest has the highest accuracy and the other classifiers lie in between with little difference between them. Every classifier has in the 400 True Positives and in the 200 True Negatives except ZeroR. The False Positives and the False Negatives is different for every classifier but no major difference between them. Only OneR has a bigger difference in the number of False Positives compared to the other classifiers. The two algorithms with the highest accuracy are RandomForest and SMO. These algorithms are probably the most effective because of their high accuracy. 
 
 
 ```{r, fig.cap="\\label{fig:experimenter}Accuracy of the algorithms for breast cancer. v is here significant higher than the test base ZeroR and * is significant lower than ZeroR.", out.width="95%"}
@@ -419,11 +431,12 @@ knitr::include_graphics("images/costsensitiveclassifier.png")
 The image \ref{fig:costsensitiveimage} shows the settings of the CostSensitiveClassifier. The minimizeExpectedCost is set to True, this is called cost sensitive classification. Here the cost is limited by adjusting the probability threshold while applying the model. The model doesn't change. In the CostMatrixEditor the 2.0 is adapted so that the FP in the cost matrix is reduced.    
 
 ```{r, costsensitive}
-cost <- read.csv("wekadata/costsensitiveclassifier.csv", header = TRUE, sep = ";")
+cost <- read.csv("wekadata/costsensitiveclassifier.csv", header = TRUE, 
+                 sep = ";")
 kable(cost, caption = "CostSensitiveClassifier for the two algorithms")
 ```
 
-Table \ref{tab:costsensitive} shows the CostSensitiveClassifier for the most effective algorithms RandomForest and SMO. The costMatrix of the CostSensitiveClassifier is adapted for each build. For RandomForest has each row a different confusion matrix and accuracy while SMO has the same confusion matrix and accuracy for each build. In the costMatrix is the cost of the False Positive in the confusion matrix increased so the False Positive decreases. This is necessary because we don't want people who are actual benign predicted to be malignant. With an normal matrix of equal values the number of FP is 5 for RandomForest. With an increase of the costMatrix for FP the number decreases to 2 and 1. The accuracy also decreases first is the accuracy 97,1388 as seen at the first row of table \ref{tab:costsensitive}. Even the number of TP decreases but the number of FN and TN increases. FN increases because there are people are tested malignant but they are actually benign and this is better so we want more FN. The classifier SMO has for every costMatrix the same accuracy and the same values. For RandomForest is the costMatrix of 2 the best because this has an high accuracy and the TP are still high compared to the costMatrix of 3 and 4. This is important because the people who are benign are actually benign and we want people to be benign not malignant. 
+Table \ref{tab:costsensitive} shows the CostSensitiveClassifier for the most effective algorithms RandomForest and SMO. The costMatrix of the CostSensitiveClassifier is adapted for each build. For RandomForest has each row a different confusion matrix and accuracy while SMO has the same confusion matrix and accuracy for each build. In the costMatrix is the cost of the False Positive in the confusion matrix increased so the False Positive decreases. This is necessary because we don't want people who are actual benign predicted to be malignant. With an normal matrix of equal values the number of FP is 5 for RandomForest. With an increase of the costMatrix for FP the number decreases to 2 and 1. The accuracy also decreases first is the accuracy 97,1388 as seen at the first row of table \ref{tab:costsensitive}. Even the number of TP decreases but the number of FN and TN increases. FN increases because there are people are tested malignant but they are actually benign, so it isn't bad that the number of FN increases. The classifier SMO has for every costMatrix the same accuracy and the same values. For RandomForest is the costMatrix of 2 the best because this has an high accuracy and the TP are still high compared to the costMatrix of 3 and 4. This is important because the people who are benign are actually benign and we want people to be benign not malignant. 
 
 
 \newpage
@@ -442,11 +455,13 @@ knitr::include_graphics("images/settingattributeselection.png")
 In image \ref{fig:settings} is the classifier changed to RandomForest and SMO the two best algorithms. The evaluator is also adapted to *CorrelationAttributeEval*, *OneRAttributeEval*, *InfoGainAttributeEval*, and *GainRatioAttributeEval*. The method search isn't changed this is only set to Ranker.     
 
 ```{r, fig.cap="\\label{fig:attributeselection}The outcome of the evaluators from the AttributeSelectedClassifierf for RandomForest and SMO. Subfigure A shows the outcome of the CorrelationAttributeEval. Subfigure B shows the outcome OneRAttributeEval. Subfigure C shows the outcome of InfoGainAttributeEval. Subfigure D shows the outcome GainRatioAttributeEval."}
+## Read .png to create images
 correlation <- readPNG("images/correlation.png")
 oner <- readPNG("images/oner.png")
 infogain <- readPNG("images/infogain.png")
 gainratio <- readPNG("images/gainratio.png")
 
+## Plot each image to combine
 im_A <- ggplot() + 
     annotation_custom(rasterGrob(correlation))
 
@@ -459,6 +474,7 @@ im_C <- ggplot() +
 im_D <- ggplot() +
     annotation_custom(rasterGrob(gainratio))
 
+## Combine and plot the images 
 plot_grid(im_A, im_B, im_C, im_D, labels = c("A", "B", "C", "D"))
 ```
 
@@ -466,8 +482,10 @@ Image \ref{fig:attributeselection} shows for every evaluator the ranked attribut
 
 
 ```{r attribute_selection}
-single_attribute <- read.csv("wekadata/singleattribute.csv", header = TRUE, sep = ";")
-kable(single_attribute, caption = "Outcome of the AttributeSelectedClassifier using 10-fold cross validation")
+single_attribute <- read.csv("wekadata/singleattribute.csv", header = TRUE, 
+                             sep = ";")
+kable(single_attribute, caption = "Outcome of the AttributeSelectedClassifier 
+      using 10-fold cross validation")
 ```
 
 Table \ref{tab:attribute_selection} shows the options and the outcome of the AttributeSelectedClassifier. The outcome for every classifier and the options evaluator and search are the same per classifier. The only difference can be seen in image \ref{fig:attributeselection} but here are the outcome of the evaluator per classifier also the same. So \ref{fig:attributeselection}A shows for both RandomForest and SMO the outcome of CorrelationAttributeEval. \ref{fig:attributeselection}B shows for both the classifiers the outcome of OneRAttributeEval. In the image shows \ref{fig:attributeselection}C the outcome of InfoGainAttributeEval for RandomForest and SMO. And the last one \ref{fig:attributeselection}D shows the outcome of the GainRatioAttributeEval for RandomForest and SMO. In table \ref{tab:attribute_selection} have accuracy, TP, FP, FN, and TN the same values as in table \ref{tab:classifiers}. So these evaluators of the AttributeSelectedClassifier doesn't have impact on the accuracy. Just like in figure \ref{fig:attributeselection} where there isn't a difference between RandomForest and SMO is here no difference between the evaluators for the same algorithm.
@@ -479,7 +497,8 @@ For attribute subset evaluation, which deletes also attributes that don't look a
 
 ```{r csfsubset}
 cfssubset <- read.csv("wekadata/cfssubseteval.csv", header = TRUE, sep = ";")
-kable(cfssubset, caption = "Outcome of the AttributeSelectedClassifier with CfsSubsetEval and different a search")
+kable(cfssubset, caption = "Outcome of the AttributeSelectedClassifier 
+      with CfsSubsetEval and different a search")
 ```
 
 Table \ref{tab:csfsubset} shows the outcome of the AttributeSelectedClassifier with the evaluator CfsSubsetEval with the search ExhaustiveSearch and BestFirst. The first two rows show the two different search for RandomForest and the last two rows shows the search for deSMO. RandomForest has for both ExhaustiveSearch and BestFirst the same accuracy of 96,2084%, TP of 443, FP of 11, FN of 15, and TN of 230. Compared to table \ref{tab:classifiers} has RandomForest now more FP 11 instead of 5 which is worse because there shouldn't be more people who are tested for benign but are actually malignant. For SMO is the everything also the same, with an accuracy of 96,7096%, TP of 445, FP of 10, FN of 13 and TN of 231. SMO has an higher accuracy compared to table \ref{tab:classifiers} which has an accuracy of 96,5665% and it has 1 more TP and 1 less FN. 
@@ -493,7 +512,8 @@ The meta learners that are investigated are *Vote*, *Bagging*, *Boosting*, and *
 
 ```{r meta_learners}
 meta_learners <- read.csv("wekadata/metalearners.csv", header = TRUE, sep = ";")
-kable(meta_learners, caption = "Meta learners with 10-fold cross validation and 10 repetitions") %>% 
+kable(meta_learners, caption = "Meta learners with 10-fold cross validation and 
+      10 repetitions") %>% 
 kable_styling(latex_options="scale_down")
 ```
 
@@ -504,15 +524,21 @@ Table \ref{tab:meta_learners} shows the outcome of the meta learners with a 10-f
 In the next section visualizes Receiver Operating Characteristics (ROC) curves for both RandomForest and SMO. ROC curve is a graph showing the performance of a classification model at all threshold settings. The ROC curve is created by plotting the True Positive Rate (TPR) against the False Positive Rate (FPR) where TPR is on the y-axis and FDR is on the x-axis.
 
 ```{r, fig.cap="\\label{fig:roc}ROC curve for the classifiers SMO and RandomForest at all threshold setting. A shows the ROC curve of SMO and B shows the ROC curve of RandomForest", out.width="80%"}
-roc_data_smo <- read.table("wekadata/roccurveSMO.arff", sep = ",", comment.char = "@")
+## Read roc curve data 
+roc_data_smo <- read.table("wekadata/roccurveSMO.arff", sep = ",", 
+                           comment.char = "@")
 
+## Define the names 
 names(roc_data_smo) <- c("Instance_number", "True_Positives", "False_Negatives",
-                         "False_Positives", "True_Negatives", "False_Positive_Rate",
-                          "True_Positive_Rate", "Precision", "Recall", "Fallout",
-                          "FMeasure", "Sample_Size", "Lift", "Threshold")
+                         "False_Positives", "True_Negatives", 
+                         "False_Positive_Rate", "True_Positive_Rate", 
+                         "Precision", "Recall", "Fallout", "FMeasure", 
+                         "Sample_Size", "Lift", "Threshold")
 
+## Create colours for the classifier and threshold 
 colors <- c(classifier ="orange", threshold = "blue")
 
+## Plot the ROC curve of SMO
 roc_smo <- ggplot(data = roc_data_smo, mapping = aes(x = False_Positive_Rate, 
                                              y = True_Positive_Rate)) +
   geom_point(mapping = aes(color = "classifier")) +
@@ -526,7 +552,7 @@ roc_smo <- ggplot(data = roc_data_smo, mapping = aes(x = False_Positive_Rate,
   theme(legend.title = element_blank())
 
 
-roc_data_rf <- read.table("wekadata/roccurverrandomforest.arff", sep = ",",
+roc_data_rf <- read.table("wekadata/roccurverrandomforest.arff", sep = ",", 
                           comment.char = "@")
 
 names(roc_data_rf) <- names(roc_data_smo)
@@ -554,7 +580,35 @@ legend <- get_legend(roc_rf + guides(color = guide_legend(nrow = 1)) +
 plot_grid(combined_roc, legend, ncol = 1)
 ```
 
-In figure \ref{fig:roc} there are two figures with an ROC curve. The first one figure \ref{fig:roc}A shows the ROC curve from the algorithm SMO and the second figure \ref{fig:roc}B shows the ROC curve from the algorithm RandomForest. The TPR is plotted against the FPR at various thresholds which forms a line when the dots join. The area under the ROC curve which is shown in orange is called the Area Under The Curve (AUC) curve. The blue threshold line shown in the figures is a straight line which is the predicted probability of an observation. Figure \ref{fig:roc}A has three dots and is connect with an line. The line is almost 90 degrees and straight with an angle this shows an ideal situation because the two curves of TP and TN almost don't overlap. When the positive and negative class overlap then there are error and runs the model in a curve or in a straight line just like the threshold line. The ROC curve of RandomForest is shown in \ref{fig:roc}B here is also the TPR plotted against the FPR. The threshold line is here the same as for the ROC curve of SMO. Between the two figures is the biggest difference that RandomForest has more dots in the figure which means that it shows more threshold points. Just like the ROC curve of SMO has RandomForest almost the same curve but for RandomForest it the line slightly straighter. This means that this is almost and ideal situation, to be ideal the line should run in a 90 degrees angle because then there are no overlap between benign and malignant. Thus the ROC curve of RandomForest is slightly better than SMO. In Weka has the AUC an value of 0.964 for SMO and the value for AUC of RandomForest is 0.9912. This also indicates that the ROC curve of RandomForest better is than SMO because the AUC of RandomForest is closer to 1 which categories as very good.
+In figure \ref{fig:roc} there are two figures with an ROC curve. The first one figure \ref{fig:roc}A shows the ROC curve from the algorithm SMO and the second figure \ref{fig:roc}B shows the ROC curve from the algorithm RandomForest. The TPR is plotted against the FPR at various thresholds which forms a line when the dots join. The area under the ROC curve which is shown in orange is called the Area Under The Curve (AUC) curve. The blue threshold line shown in the figures is a straight line which is the predicted probability of an observation. Figure \ref{fig:roc}A has three dots and is connect with an line. The line is almost 90 degrees and straight with an angle this shows an ideal situation because the two curves of TP and TN almost don't overlap. When the positive and negative class overlap then there are error and runs the model in a curve or in a straight line just like the threshold line. The ROC curve of RandomForest is shown in \ref{fig:roc}B here is also the TPR plotted against the FPR. The threshold line is here the same as for the ROC curve of SMO. Between the two figures is the biggest difference that RandomForest has more dots in the figure which means that it shows more threshold points. Just like the ROC curve of SMO has RandomForest almost the same curve but for RandomForest is the line slightly straighter. This means that this is almost and ideal situation, to be ideal the line should run in a 90 degrees angle because then there are no overlap between benign and malignant. Thus the ROC curve of RandomForest is slightly better than SMO. In Weka has the AUC an value of 0.964 for SMO and the value for AUC of RandomForest is 0.9912. This also indicates that the ROC curve of RandomForest better is than SMO because the AUC of RandomForest is closer to 1 which categories as very good.
+
+From all the algorithms is RandomForest the best with the standard settings.
+
+# Learning curve
+
+For the learning curve is RandomForest as classifier used. 
+
+```{r, fig.cap="\\label{fig:learningcurveimage}The settings of classifier FilteredClassifier to create a learning curve.", out.width="75%"}
+knitr::include_graphics("images/learningcurve.png")
+```
+
+Image \ref{fig:learningcurveimage} shows the setting of the FilteredClassifier. The classifier is FilteredClassifier under meta and it has as classifier RandomForest and as filter Resample. The noReplacement is set to true so there are no replacements and the sampleSizePercent differs from 0% to 100% as seen in the right part of the image.
+
+```{r learning, fig.cap="\\label{fig:learning}Learning curve of the accuracy for different sample size percentages compared to the baseline zeroR.", out.width="75%"}
+learning_data <- read.csv("wekadata/learningcurve.csv", header = TRUE, sep = ";")
+kable(learning_data, caption = "Accuracy of the FilteredClassifier with the different sampleSizePercent")
+
+ggplot(learning_data, aes(x = sampleSizePercent, y = Accuracy)) +
+  geom_point(colour = "darkred") +
+  geom_line(colour = "darkred") +
+  geom_hline(yintercept = 65, linetype ="dashed", color = "steelblue") +
+  theme_minimal() +
+  labs(title="Learning curve", x="Sample Size Percent (%)", y="Accuracy (%)") +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  scale_y_continuous(breaks = seq(50, 100, 5))
+```
+
+The table \ref{tab:learning} contains two column with the accuracy in the second column which give the accuracy for the different sample size percentages from the classifier FilteredClassifier. Here can be seen that the accuracy of only for 1% of the sample size below 90%. From the percentage 20% until 50% is the accuracy in the 95% which is still growing as seen for the percentages 60 until 100 where the accuracy is in 96%. The highest accuracy is for 90% of the sample size. These values create a learning curve together which is shown in figure \ref{fig:learning}. The figure \ref{fig:learning} has a red line with point which shown the accuracy for the different sample size percentages of RandomForest and the dashed blue line shows the baseline which is the accuracy of ZeroR for every percentage. The accuracy of ZeroR is the same because is the simplest classification method which relies only on predicts the class and ignores all attributes. And ZeroR has thus for all percentages the same accuracy. Compared to the baseline of ZeroR has RandomForest a much higher accuracy. RandomForest shows a smooth curve with one peak at 60% but otherwise is remains gradual. To get a reasonable performance estimate is there a least 60% of the data needed because the learning curve has from 60% the same accuracy's and difference between the accuracy's. Compared to table \ref{tab:learning} has 60% and 90% an accuracy of 96,9957% and for 70%, 80%, and 100% has RandomForest and accuracy of 96,5665%. Below 60% is the accuracy between 86% and 96% thus there is at least 60% of the data needed to get a reasonable performance.
 
 
 \newpage
@@ -562,11 +616,12 @@ In figure \ref{fig:roc} there are two figures with an ROC curve. The first one f
 
 \bibitem{research}
 Olvi L Mangasarian, W Nick Street, William H Wolberg: \textit{Research article},  
-Breast Cancer Diagnosis and Prognosis via Linear Programming, December 19 1994, Retrieved from https://www.neuraldesigner.com/learning/examples/breast-cancer-diagnosis on 05-10-2021
+Breast Cancer Diagnosis and Prognosis via Linear Programming, December 19 1994, Retrieved from the website researchgate.net on 05-10-2021
 
 \bibitem{neuraldesigner}
 Neural Designer: \textit{Machine Learning Examples},  
-Diagnose breast cancer from fine-needle aspirate images using Neural Designer, Retrieved from the website researchgate.net on 05-10-2021
+Diagnose breast cancer from fine-needle aspirate images using Neural Designer, 
+Retrieved from https://www.neuraldesigner.com/learning/examples/breast-cancer-diagnosis on 05-10-2021
 
 \bibitem{dataset}
 UCI Machine Learning Repository: \textit{Breast Cancer Wisconsin (Original) Data Set}, Center for Machine Learning and Intelligent Systems
