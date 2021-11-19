@@ -2,6 +2,8 @@
 title: "Breast Cancer Wisconsin"
 author: "Rose Hazenberg"
 date: "`r Sys.Date()`"
+header-includes:
+   - \usepackage{float}
 output:
     pdf_document:
       number_sections: yes
@@ -161,6 +163,7 @@ ggplot(data = breast_long, mapping = aes(x = property, y = value)) +
   labs(x="Property (n/a)", y="Total count of values (n/a)", 
        color = "Class", fill = "Class") + 
   coord_flip() +
+  ## Get the names from the codebook as labels
   scale_x_discrete(labels = sort(codebook$Full.Name[2:10])) +
   theme_classic()
 ```
@@ -181,6 +184,7 @@ ggplot(data = breast_long, mapping = aes(x = property, y = value,
   labs(x = "Property (n/a)", y = "Value (n/a)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ## Get the names from the codebook as labels
   scale_x_discrete(labels = sort(codebook$Full.Name[2:10])) +
   scale_y_continuous(breaks = c(1:10))
 ```
@@ -199,6 +203,7 @@ ggplot(breast_long, aes(x = value, y = property)) +
   theme_minimal() +
   labs(x = "Value (n/a)", y = "Property (n/a)", 
        colour = "Class", linetype = "Class") +
+  ## Get the names from the codebook as labels
   scale_y_discrete(labels = sort(codebook$Full.Name[2:10])) +
   scale_x_continuous(breaks = c(1:10))
 ```
@@ -244,6 +249,7 @@ ggplot(data = breast_long, mapping = aes(x = property, y = value)) +
   labs(x="Property (n/a)", y="Value (n/a)", color = "Class", fill = "Class") +
   theme_minimal() +
   theme(axis.text = element_text(angle = 90)) +
+  ## Get the names from the codebook as labels
   scale_x_discrete(labels = sort(codebook$Full.Name[2:10])) +
   scale_y_continuous(breaks = c(1:10))
 ```
@@ -307,10 +313,9 @@ plot_grid(combined, combined_legend, ncol = 1, rel_heights = c(1, .1))
 
 Figure \ref{fig:cluster}A shows a K-means cluster of the property uniformity of cell size for both classes. It shows that there is a cluster for the class benign at value 1, and there is a small cluster at values 2 and 3. The other blue dots are scattered between values 4 and 9. For the class malignant is there a cluster at value 10 and smaller clusters at value 3 until 8. For this class are the blue dots are more scattered over the values. The cluster for both classes can be explained that benign has in total more 1 values and malignant has in total more 10 values. By both classes are the pink dots scattered in the plot these are small clusters.
 
-Figure \ref{fig:cluster}B looks almost the same as in figure 
-\ref{fig:cluster}A but here are the blue dots more scattered between the values 3 until 8 and there are more pink clusters. The class malignant has in one eye the same shape of clusters as in figure \ref{fig:cluster}A and it also has two pink clusters. 
+Figure \ref{fig:cluster}B looks almost the same as in figure \ref{fig:cluster}A but here are the blue dots more scattered between the values 3 until 8 and there are more pink clusters. The class malignant has in one eye the same shape of clusters as in figure \ref{fig:cluster}A and it also has two pink clusters. 
 
-
+\pagebreak
 ### Principal Components Analysis (PCA) of the dataset
 
 ```{r, fig.cap="\\label{fig:pca}PCA plot with the variances of the data breast cancer. A: Scree plot with the variance of each PC. B: PCA plot with scores of the variation of PC1 and PC2.", fig.show='hold', out.width="50%"}
@@ -348,7 +353,8 @@ Figure \ref{fig:pca} shows a principal component analysis (PCA) where figure \re
 ## Get the total number of value per column
 kable(colSums(na.omit(breastcancer[2:10])), 
       col.names = "Total number of values", 
-      caption = "The total number of values per column")
+      caption = "The total number of values per column") %>%
+  kable_styling(latex_options = "HOLD_position")
 
 ## Remove the column of mitoses
 breast_clean <- breastcancer[-10]
@@ -397,7 +403,8 @@ It is important that the classification is accurate but it should be fast becaus
 matrix <- read.csv("wekadata/matrix.csv", sep = ";", header = FALSE) 
 ## Set rownames and colnames to null
 rownames(matrix) <- colnames(matrix) <- NULL
-kable(matrix, caption = "Confusion matrix of the breast cancer dataset")
+kable(matrix, caption = "Confusion matrix of the breast cancer dataset") %>%
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 The confusion matrix consist of the following layout in Weka:
@@ -416,17 +423,21 @@ With the clean dataset, we start investigating the performance of all standard M
 
 ```{r classifiers}
 classifiers <- read.csv("wekadata/classifiers.csv", header = TRUE, sep = ";")
-kable(classifiers, caption = "Classifications using 10-fold cross validation")
+kable(classifiers, caption = "Classifications using 10-fold cross validation") %>% 
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 Table \ref{tab:classifiers} shows the results of the machine learning algorithms with 8 classifier categories. The results show the speed, accuracy, True Positive (TP), False Positive(FP), True Negative(TN), and False Negative(FN), the last four are part of the confusion matrix in Weka. The accuracy is shown in percentages. The first row shows the outcome of the classifier ZeroR, here can be seen that the accuracy is 65,5222% and that there are only TP 458 and FP 241, FN and TN have both a value of 0. OneR has an accuracy of 92,7039% which is already higher than for ZeroR. OneR has 444 TP, 37 FP, 14 FN, and 204 TN which has thus more FN and TN than ZeroR. The next classifier in the table is NaiveBayes, this classifier has a higher accuracy than both ZeroR and OneR which is 96,4235% NaiveBayes contains 439 TP, 6 FP, 19 FN, and 235 TN. Another classifier that is used is SimpleLogistic which has an accuracy of 95,7082% it also has 446 TP, 18 FP, 12 FN, and 223 TN. The fifth row of table \ref{tab:classifiers} contains the results of the classifier SMO. SMO has an accuracy of 96.5665% which has so far the highest accuracy. It has 444 TP, 10 FP, 14 FN, and 231 TN. The next classifier is IBk with an accuracy of 95,1359% and it has 443 TP, 19 FP, 15 FN, and 222 TN. The seventh classifier is J48 with an accuracy of 94,9928%. J48 has 438 TP, 15 FP, 20 FN, and 226 TN. The last classifier is RandomForest which has an accuracy of 97,1388% and has thus the highest accuracy of all the classifiers. RandomForest has 443 TP, 5 FP, 15 FN, and 236 TN. In general, all the classifiers have a low speed which is the time it takes to build the model in seconds, SimpleLogistic takes the longest to build the model. Comparing the accuracy for all the classifiers you can be seen that ZeroR has the lowest accuracy this is because ZeroR has for both FN and TN 0. ZeroR shows the most likely class with only the value of both class benign and malignant which is the total number of the classes just like in \ref{tab:total}. RandomForest has the highest accuracy and the other classifiers lie in between with little difference between them. Every classifier has in the 400 True Positives and in the 200 True Negatives except ZeroR. The False Positives and the False Negatives are different for every classifier but no major difference between them. Only OneR has a bigger difference in the number of False Positives compared to the other classifiers. The two algorithms with the highest accuracy are RandomForest and SMO. These algorithms are probably the most effective because of their high accuracy. 
 
+\pagebreak
 
 ```{r, fig.cap="\\label{fig:experimenter}Accuracy of the algorithms for breast cancer. v is here significant higher than the test base ZeroR and * is significant lower than ZeroR.", out.width="95%"}
 knitr::include_graphics("images/experimenteroutput.png")
 ```
 
 Image \ref{fig:experimenter} shows the output of the experiment of the same algorithms in table \ref{tab:classifiers} but with 10 repetitions. ZeroR is the test base so the other algorithms are compared to ZeroR which has an accuracy of 65,52% also in table \ref{tab:classifiers}. For OneR is the accuracy 92,01% with a standard deviation of 3,24 and in table \ref{tab:classifiers} is this 92,7039% for 1 repeat. This is in line with each other because of the standard deviation it can have a difference of 3,24. OneR has a significantly higher accuracy than ZeroR which can be seen at the v after the standard deviation. NaiveBayes has an accuracy of 96,37% for 10 repeats with a standard deviation of 2,03 and it is also significantly higher than ZeroR. In table \ref{tab:classifiers} has NaiveBayes an accuracy of 96,4235% for one repeat which is in line with each other. SimpleLogistic has an accuracy of 96,21% in image \ref{fig:experimenter} with a standard deviation of 2,17 and it is also significantly higher than ZeroR. In table \ref{tab:classifiers} has SimpleLogistic an accuracy of 95,7082% which is lower than in image \ref{fig:experimenter} but it has a standard deviation of 2,17 so this has no effect because it has another number of repetitions. SMO has an accuracy of 96,74% with a standard deviation of 1,99 and is also significant higher than ZeroR. In table \ref{tab:classifiers} has SMO an accuracy of 96,5665% which has a low difference with each other. IBk has an accuracy of 95,44% and a standard deviation of 2,46. IBk has an accuracy of 95,1359% in table \ref{tab:classifiers} and has a little difference. Number 7, J48 has an accuracy of 94,95% with a standard deviation of 2,63. J48 has a very low difference with 1 repeat as seen in table \ref{tab:classifiers}. The last one RandomForest has an accuracy of 96,84% but it has a higher accuracy for one repeat as seen in table \ref{tab:classifiers} which is 97,1388% but it has a standard deviation of 2,03 so it can differ. For the two best algorithms it doesn't matter because SMO and RandomForest have still the highest accuracy after 10 repeats. 
+
+\pagebreak
 
 ```{r, fig.cap="\\label{fig:costsensitiveimage}The settings of the CostSensitiveClassifier and the CostMatrix.", out.width="75%"}
 knitr::include_graphics("images/costsensitiveclassifier.png")
@@ -437,7 +448,8 @@ The image \ref{fig:costsensitiveimage} shows the settings of the CostSensitiveCl
 ```{r, costsensitive}
 cost <- read.csv("wekadata/costsensitiveclassifier.csv", header = TRUE, 
                  sep = ";")
-kable(cost, caption = "CostSensitiveClassifier for the two algorithms")
+kable(cost, caption = "CostSensitiveClassifier for the two algorithms") %>%
+   kable_styling(latex_options = "HOLD_position")
 ```
 
 Table \ref{tab:costsensitive} shows the CostSensitiveClassifier for the most effective algorithms RandomForest and SMO. The costMatrix of the CostSensitiveClassifier is adapted for each build. For RandomForest has each row a different confusion matrix and accuracy while SMO has the same confusion matrix and accuracy for each build. In the costMatrix is the cost of the False Negative in the confusion matrix increased so the False Positive decreases. This is necessary because we don't want people who are actually benign predicted to be malignant. With a normal matrix of equal values, the number of FP is 5 for RandomForest. With an increase of the costMatrix for FP, the number decreases to 2 and 1. The accuracy also decreases first is the accuracy 97,1388 as seen at the first row of table \ref{tab:costsensitive}. Even the number of TP decreases but the number of FN and TN increases. FN increases because there are people who are tested malignant but they are actually benign, so it isn't bad that the number of FN increases. The classifier SMO has for every costMatrix the same accuracy and the same values. For RandomForest is the costMatrix of 2 is the best because this has an high accuracy and the TP is still high compared to the costMatrix of 3 and 4. This is important because the people who are benign are actually benign and we want people to be benign not malignant. 
@@ -489,7 +501,8 @@ Image \ref{fig:attributeselection} shows for every evaluator the ranked attribut
 single_attribute <- read.csv("wekadata/singleattribute.csv", header = TRUE, 
                              sep = ";")
 kable(single_attribute, caption = "Outcome of the AttributeSelectedClassifier 
-      using 10-fold cross validation")
+      using 10-fold cross validation") %>%
+   kable_styling(latex_options = "HOLD_position")
 ```
 
 Table \ref{tab:attribute_selection} shows the options and the outcome of the AttributeSelectedClassifier. The outcome for every classifier and the options evaluator and search are the same per classifier. The only difference can be seen in image \ref{fig:attributeselection} but here is the outcome of the evaluator per classifier also the same. So \ref{fig:attributeselection}A shows for both RandomForest and SMO the outcome of CorrelationAttributeEval. \ref{fig:attributeselection}B shows for both the classifiers the outcome of OneRAttributeEval. The image shows \ref{fig:attributeselection}C the outcome of InfoGainAttributeEval for RandomForest and SMO. And the last one \ref{fig:attributeselection}D shows the outcome of the GainRatioAttributeEval for RandomForest and SMO. In table \ref{tab:attribute_selection} have accuracy, TP, FP, FN, and TN the same values as in table \ref{tab:classifiers}. So these evaluators of the AttributeSelectedClassifier don't have an impact on the accuracy. Just like in figure \ref{fig:attributeselection} where there isn't a difference between RandomForest and SMO is here no difference between the evaluators for the same algorithm.
@@ -502,7 +515,8 @@ For attribute subset evaluation, which deletes also attributes that don't look a
 ```{r csfsubset}
 cfssubset <- read.csv("wekadata/cfssubseteval.csv", header = TRUE, sep = ";")
 kable(cfssubset, caption = "Outcome of the AttributeSelectedClassifier 
-      with CfsSubsetEval and different a search")
+      with CfsSubsetEval and different a search") %>% 
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 Table \ref{tab:csfsubset} shows the outcome of the AttributeSelectedClassifier with the evaluator CfsSubsetEval with the search ExhaustiveSearch and BestFirst. The first two rows show the two different search for RandomForest and the last two rows shows the search for deSMO. RandomForest has for both ExhaustiveSearch and BestFirst the same accuracy of 96,2084%, TP of 443, FP of 11, FN of 15, and TN of 230. Compared to table \ref{tab:classifiers} has RandomForest now more FP 11 instead of 5 which is worse because there shouldn't be more people who are tested for benign but are actually malignant. For SMO is the everything also the same, with an accuracy of 96,7096%, TP of 445, FP of 10, FN of 13, and TN of 231. SMO has a higher accuracy compared to table \ref{tab:classifiers} which has an accuracy of 96,5665% and it has 1 more TP and 1 less FN. 
@@ -518,7 +532,8 @@ The meta learners that are investigated are *Vote*, *Bagging*, *Boosting*, and *
 meta_learners <- read.csv("wekadata/metalearners.csv", header = TRUE, sep = ";")
 kable(meta_learners, caption = "Meta learners with 10-fold cross validation and 
       10 repetitions") %>% 
-kable_styling(latex_options="scale_down")
+  kable_styling(latex_options="scale_down") %>%
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 Table \ref{tab:meta_learners} shows the outcome of the meta learners with 10-fold cross-validation and a repetition of 10. The first column shows the algorithm, the second column shows the classifier that is needed for the algorithm, the third column only applies for the algorithm voting, and the fourth column only applies for the algorithm stacking which needs a metaClassifier. The other columns show the accuracy, TP, FP, FN, and TN just like the tables described above. The classifiers that are used are RandomForest, SMO, and NaiveBayes. NaiveBayes is added, besides the two best classifiers, because NaiveBayes has in \ref{tab:classifiers} a second best accuracy after SMO  and it has 6 FP 1 more than RandomForest which is important because there need to be a low number of people who are tested benign but are actually malignant. For the first two rows, the *Vote* algorithm was used with the classifiers RandomForest, SMO, and NaiveBayes and with the combinationRule, Average of Probabilities and Majority Voting. Only the accuracy is different for these two but the confusion matrix is the same. The accuracy is different because of the combinationRule. The Average of Probabilities has the highest accuracy of them both but also for all of the algorithms. The algorithm *Bagging* is used with the classifiers RandomForest, SMO, and NaiveBayes. The algorithm with RandomForest has an accuracy of 96,91% and has also 7 FP and one more FN than Vote. SMO has an accuracy of 96,74% and has more FP than Bagging with RandomForest. NaiveBayes has the lowest accuracy and has less TP and FP but more TN so here are there more malignant. 
@@ -573,14 +588,16 @@ roc_rf <- ggplot(data = roc_data_rf, mapping = aes(x = False_Positive_Rate,
   theme_pubr() +
   theme(legend.title = element_blank())
 
-
+## Combine the two plots
 combined_roc <- plot_grid(roc_smo + theme(legend.position = "none"), 
                           roc_rf + theme(legend.position = "none"),
                           labels = c('A', 'B'), label_size = 12)
 
+## Combine the legend
 legend <- get_legend(roc_rf + guides(color = guide_legend(nrow = 1)) +
                        theme(legend.position = "bottom"))
 
+## Plot the combined plots
 plot_grid(combined_roc, legend, ncol = 1)
 ```
 
@@ -597,10 +614,17 @@ knitr::include_graphics("images/learningcurve.png")
 
 Image \ref{fig:learningcurveimage} shows the setting of the FilteredClassifier. The classifier is FilteredClassifier under meta and it has as classifier RandomForest and as filter Resample. The noReplacement is set to true so there are no replacements and the sampleSizePercent differs from 0% to 100% as seen in the right part of the image.
 
-```{r learning, fig.cap="\\label{fig:learning}Learning curve of the accuracy for different sample size percentages compared to the baseline zeroR.", out.width="75%"}
-learning_data <- read.csv("wekadata/learningcurve.csv", header = TRUE, sep = ";")
-kable(learning_data, caption = "Accuracy of the FilteredClassifier with the different sampleSizePercent")
+\pagebreak
 
+```{r learning, fig.cap="\\label{fig:learning}Learning curve of the accuracy for different sample size percentages compared to the baseline zeroR.", out.width="75%"}
+learning_data <- read.csv("wekadata/learningcurve.csv", header = TRUE, 
+                          sep = ";")
+
+kable(learning_data, caption = "Accuracy of the FilteredClassifier with the 
+      different sampleSizePercent") %>%
+  kable_styling(latex_options = "HOLD_position")
+
+## Plot the learning curve
 ggplot(learning_data, aes(x = sampleSizePercent, y = Accuracy)) +
   geom_point(colour = "darkred") +
   geom_line(colour = "darkred") +
@@ -614,7 +638,6 @@ ggplot(learning_data, aes(x = sampleSizePercent, y = Accuracy)) +
 The table \ref{tab:learning} contains two columns with the accuracy in the second column which gives the accuracy for the different sample size percentages from the classifier FilteredClassifier. Here can be seen that the accuracy of only for 1% of the sample size is below 90%. From the percentage, 20% until 50% is the accuracy in the 95% which is still growing as seen for the percentages 60 until 100 where the accuracy is in 96%. The highest accuracy is for 90% of the sample size. These values create a learning curve together which is shown in figure \ref{fig:learning}. Figure \ref{fig:learning} has a red line with points which shows the accuracy for the different sample size percentages of RandomForest and the dashed blue line shows the baseline which is the accuracy of ZeroR for every percentage. The accuracy of ZeroR is the same because is the simplest classification method that relies only on predicting the class and ignores all attributes. And ZeroR has thus for all percentages the same accuracy. Compared to the baseline of ZeroR has RandomForest a much higher accuracy. RandomForest shows a smooth curve with one peak at 60% but otherwise is remains gradual. To get a reasonable performance estimate is there a least 60% of the data is needed because the learning curve has from 60% the same accuracies and the same difference between the accuracies. Compared to table \ref{tab:learning} has 60% and 90% an accuracy of 96,9957% and for 70%, 80%, and 100% has RandomForest and accuracy of 96,5665%. Below 60% is the accuracy between 86% and 96% thus there is at least 60% of the data needed to get a reasonable performance.
 
 
-\newpage
 \begin{thebibliography}{9}
 
 \bibitem{research}
